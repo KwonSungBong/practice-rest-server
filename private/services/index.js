@@ -22,17 +22,41 @@ function sequencePromise(sequencePromiseList, finalPromise){
     })
 }
 
-exports.login = function(email, password){
+exports.signUp = function(user){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
-            resolve({'email':email, 'password':password})
+            resolve()
         })
     }
 
-    const userSequence = function() {
+    const signUpSequence = function(prevResults) {
         return new Promise(function (resolve, reject){
-            let getUserPromise = userRepository.getUser(email)
-            Promise.resolve(getUserPromise).then(function(results){
+            let promise = userRepository.insertUser(user)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, signUpSequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
+}
+
+exports.signIn = function(email, password){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
+
+    const userSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getUserByEmail(email)
+            Promise.resolve(promise).then(function(results){
                 resolve(results)
             })
         })
@@ -76,28 +100,80 @@ exports.login = function(email, password){
     return finalSequence
 }
 
-exports.logout = function(accessToken){
+exports.signOut = function(accessToken){
 
 }
 
-exports.checkDuplicationEmail = function(email){
+exports.duplicateUserEmail = function(userEmail){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const getUserByEmailSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getUserByEmail(userEmail)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, getUserByEmailSequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }
 
-exports.checkDuplicationName = function(name){
+exports.duplicateUserName = function(userName){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const getUserByNameSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getUserByName(userName)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, getUserByNameSequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }
 
-exports.signup = function(email, password, name){
+exports.editAccessUser = function(accessUser){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
-}
+    const updateAccessUserSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.updateAccessUser(accessUser)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
 
-exports.signout = function(user, email, password){
+    const finalSequence = sequencePromise([firstSequence, updateAccessUserSequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
 
-}
-
-exports.editProfile = function(user, name){
-
+    return finalSequence
 }
 
 exports.getBoards = function(){
@@ -107,10 +183,10 @@ exports.getBoards = function(){
         })
     }
 
-    const getBoardsSequence = function() {
+    const getBoardsSequence = function(prevResults) {
         return new Promise(function (resolve, reject){
-            let getBoardsPromise = boardRepository.getBoards()
-            Promise.resolve(getBoardsPromise).then(function(results){
+            let promise = boardRepository.getBoards()
+            Promise.resolve(promise).then(function(results){
                 resolve(results)
             })
         })
@@ -124,7 +200,7 @@ exports.getBoards = function(){
 
     return finalSequence
 }
-exports.getBoard = function(idx, pagination, searchCondition){
+exports.getBoard = function(board){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
             resolve()
@@ -133,8 +209,8 @@ exports.getBoard = function(idx, pagination, searchCondition){
 
     const getBoardSequence = function() {
         return new Promise(function (resolve, reject){
-            let getBoardPromise = boardRepository.getBoard(idx, pagination, searchCondition)
-            Promise.resolve(getBoardPromise).then(function(results){
+            let promise = boardRepository.getBoard(board)
+            Promise.resolve(promise).then(function(results){
                 resolve(results)
             })
         })
@@ -148,27 +224,165 @@ exports.getBoard = function(idx, pagination, searchCondition){
 
     return finalSequence
 }
-exports.getPosts = function(){
+exports.getPost = function(post){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const getPostSequence = function() {
+        return new Promise(function (resolve, reject){
+            let promise = boardRepository.getPost(post)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, getPostSequence],function(resolve,results){
+        const status = 'success'
+        const post = results[1]
+        resolve({'status':status, 'data': {'post': post}})
+    })
+
+    return finalSequence
 }
-exports.getPost = function(){
+exports.insertPost = function(boardIdx, post){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const insertPostSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = boardRepository.insertPost(boardIdx, post)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, insertPostSequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }
-exports.updatePost = function(){
+exports.updatePost = function(post){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const updatePostSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = boardRepository.updatePost(post)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, updatePostSequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }
-exports.deletePost = function(){
+exports.deletePost = function(post){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const deletePostSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = boardRepository.deletePost(post)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, deletePostSequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }
-exports.getReplies = function(){
+exports.insertReply = function(postIdx, reply){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const insertReplySequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = boardRepository.insertReply(postIdx, reply)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, insertReplySequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }
-exports.getReply = function(){
+exports.updateReply = function(reply){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
+    const updateReplySequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = boardRepository.updateReply(reply)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, updateReplySequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }
-exports.updateReply = function(){
+exports.deleteReply = function(reply){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
 
-}
-exports.deleteReply = function(){
+    const deleteReplySequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = boardRepository.deleteReply(reply)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
 
+    const finalSequence = sequencePromise([firstSequence, deleteReplySequence],function(resolve, results){
+        const status = 'success'
+        resolve({'status':status})
+    })
+
+    return finalSequence
 }

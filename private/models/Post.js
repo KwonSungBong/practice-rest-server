@@ -1,11 +1,12 @@
 class Post{
-    constructor({idx, subject, content, regDate, modDate, user}){
+    constructor({idx, subject, content, regDate, modDate, user, pagination}){
         this._idx_ = idx
         this._subject_ = subject
         this._content_ = content
         this._regDate_ = regDate
         this._modDate_ = modDate
         this._user_ = user
+        this._pagination_ = pagination
     }
 
     get idx(){
@@ -44,9 +45,15 @@ class Post{
     set user(user){
         this._user_ = user
     }
+    get pagination(){
+        return this._pagination_
+    }
+    set pagination(pagination){
+        this._pagination_ = pagination
+    }
 }
 
 exports.getInstance = function(param){
-    let {idx, subject, content, regDate, modDate, user} = param
-    return new Post({idx:idx, subject:subject, content:content, regDate:regDate, modDate:modDate, user:user})
+    let {idx, subject, content, regDate, modDate, user, pagination} = param
+    return new Post({idx:idx, subject:subject, content:content, regDate:regDate, modDate:modDate, user:user, pagination:pagination})
 }

@@ -1,4 +1,3 @@
-import {emailFactory} from './Email'
 class User {
     constructor({idx, email, password, name, regDate, modDate})
     {
