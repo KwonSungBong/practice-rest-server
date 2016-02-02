@@ -9,7 +9,6 @@ class Board{
         this._pagination_ = pagination
         this._searchCondition_ = searchCondition
     }
-
     get idx(){
         return this._idx_
     }

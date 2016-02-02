@@ -2,6 +2,7 @@ import express from 'express';
 import service from '../private/services/index'
 import User from '../private/models/User'
 import Post from '../private/models/Post'
+import Reply from '../private/models/Reply'
 import Board from '../private/models/Board'
 import AccessUser from '../private/models/AccessUser'
 import Pagination from '../private/models/Pagination'
@@ -33,7 +34,7 @@ router.get('/', function(req, res, next) {
   res.render('index', {});
 })
 
-router.get('/duplicateUser/email/:userEmail', function(req, res, next) {
+router.get('/duplicate/user/email/:userEmail', function(req, res, next) {
   const userEmail = req.params.userEmail
 
   const firstSequence = function(){
@@ -54,15 +55,15 @@ router.get('/duplicateUser/email/:userEmail', function(req, res, next) {
   const finalSequence = sequencePromise([firstSequence,duplicateUserEmailSequence],function(resolve,results){
     const param = results[0]
     const duplicateUserEmailResult = results[1]
-    if(duplicateUserEmailResult.status === 'success'){
-      param.res.status(200).json()
-    }else {
-      param.res.status(202).json()
+    if(duplicateUserEmailResult.status === 'notExist'){
+      param.res.status(200).json({"message":'존재하지 않는 이메일입니다.'})
+    }else if(duplicateUserEmailResult.status === 'exist'){
+      param.res.status(202).json({'message':'이미 존재하는 이메일입니다.'})
     }
   })
 })
 
-router.get('/duplicateUser/name/:userName', function(req, res, next) {
+router.get('/duplicate/user/name/:userName', function(req, res, next) {
   const userName = req.params.userName
 
   const firstSequence = function(){
@@ -83,50 +84,15 @@ router.get('/duplicateUser/name/:userName', function(req, res, next) {
   const finalSequence = sequencePromise([firstSequence,duplicateUserNameSequence],function(resolve,results){
     const param = results[0]
     const duplicateUserNameResult = results[1]
-    if(duplicateUserNameResult.status === 'success'){
-      param.res.status(200).json()
-    }else {
-      param.res.status(202).json()
+    if(duplicateUserNameResult.status === 'notExist'){
+      param.res.status(200).json({"message":'존재하지 않는 이름입니다.'})
+    }else if(duplicateUserNameResult.status === 'exist'){
+      param.res.status(202).json({'message':'이미 존재하는 이름입니다.'})
     }
   })
 })
 
-router.post('/editAccessUser', function(req, res, next){
-  const accessToken = req.accessToken
-  const userIdx = req.body.userIdx
-  const userEmail = req.body.userEmail
-  const userPassword = req.body.userPassword
-  const userName = req.body.userName
-
-  const firstSequence = function(){
-    return new Promise(function (resolve, reject){
-      const accessUser = AccessUser.getInstance({accessToken:accessToken, idx:userIdx, email:userEmail, password:userPassword, name:userName})
-      resolve({'req':req, 'res':res, 'accessUser':accessUser})
-    })
-  }
-
-  const editAccessUserSequence = function(prevResults) {
-    return new Promise(function (resolve, reject){
-      const accessUser = prevResults[0].accessUser
-      let promise = service.editAccessUser(accessUser)
-      Promise.resolve(promise).then(function(results){
-        resolve(results)
-      })
-    })
-  }
-
-  const finalSequence = sequencePromise([firstSequence,editAccessUserSequence],function(resolve,results){
-    const param = results[0]
-    const editAccessUserResult = results[1]
-    if(editAccessUserResult.status === 'success'){
-      param.res.status(200).json()
-    }else {
-      param.res.status(202).json()
-    }
-  })
-})
-
-router.post('/signUp', function(req, res, next) {
+router.post('/accessUser', function(req, res, next) {
   const userEmail = req.body.userEmail
   const userPassword = req.body.userPassword
   const userName = req.body.userName
@@ -159,9 +125,43 @@ router.post('/signUp', function(req, res, next) {
   })
 })
 
-router.post('/signIn', function(req, res, next) {
+router.put('/accessUser', function(req, res, next){
+  const accessToken = req.accessToken
   const userEmail = req.body.userEmail
   const userPassword = req.body.userPassword
+  const userName = req.body.userName
+
+  const firstSequence = function(){
+    return new Promise(function (resolve, reject){
+      const accessUser = AccessUser.getInstance({accessToken:accessToken, email:userEmail, password:userPassword, name:userName})
+      resolve({'req':req, 'res':res, 'accessUser':accessUser})
+    })
+  }
+
+  const updateAccessUserSequence = function(prevResults) {
+    return new Promise(function (resolve, reject){
+      const accessUser = prevResults[0].accessUser
+      let promise = service.updateAccessUser(accessUser)
+      Promise.resolve(promise).then(function(results){
+        resolve(results)
+      })
+    })
+  }
+
+  const finalSequence = sequencePromise([firstSequence,updateAccessUserSequence],function(resolve,results){
+    const param = results[0]
+    const editAccessUserResult = results[1]
+    if(editAccessUserResult.status === 'success'){
+      param.res.status(200).json()
+    }else {
+      param.res.status(202).json()
+    }
+  })
+})
+
+router.get('/login', function(req, res, next) {
+  const userEmail = req.query.userEmail
+  const userPassword = req.query.userPassword
 
   const firstSequence = function(){
     return new Promise(function (resolve, reject){
@@ -192,8 +192,9 @@ router.post('/signIn', function(req, res, next) {
   })
 })
 
-router.post('/signOut', function(req, res, next) {
+router.post('/logout', function(req, res, next) {
   const accessToken = req.accessToken
+  res.status(200).json()
 })
 
 router.get('/boards', function(req, res, next){
@@ -215,7 +216,7 @@ router.get('/boards', function(req, res, next){
   const finalSequence = sequencePromise([firstSequence,getBoardsSequence],function(resolve,results){
     const param = results[0]
     const boardsResults = results[1]
-    param.res.status(200).json({})
+    param.res.status(200).json({"boards":boardsResults.data.boards})
   })
 })
 
@@ -247,44 +248,12 @@ router.get('/board/:boardIdx', function(req, res, next){
 
   const finalSequence = sequencePromise([firstSequence,getBoardSequence],function(resolve,results){
     const param = results[0]
-    const getBoardResult = results[1]
-
-    param.res.status(200).json({})
+    const boardResults = results[1]
+    param.res.status(200).json({"board":boardResults.data.board})
   })
 })
 
-router.get('/board/post/:postIdx', function(req, res, next){
-  const postIdx = req.params.postIdx
-  const page = req.query.page || 1
-  const perPage = req.query.perPage || 2
-
-  const firstSequence = function(){
-    return new Promise(function (resolve, reject){
-      const pagination = Pagination.getInstance({page:page, perPage:perPage})
-      const post = Post.getInstance({postIdx:postIdx, pagination:pagination})
-      resolve({req:req, res:res, post:post})
-    })
-  }
-
-  const getPostSequence = function(prevResults) {
-    return new Promise(function (resolve, reject){
-      const post = prevResults[0].post
-      let promise = service.getPost(post)
-      Promise.resolve(promise).then(function(results){
-        resolve(results)
-      })
-    })
-  }
-
-  const finalSequence = sequencePromise([firstSequence,getPostSequence],function(resolve,results){
-    const param = results[0]
-    const postResult = results[1]
-
-    param.res.status(200).json({})
-  })
-})
-
-router.post('/board/:idx/post', function(req, res, next){
+router.post('/board/:boardIdx/post', function(req, res, next){
   const accessToken = req.accessToken
   const boardIdx = req.params.boardIdx
   const postSubject = req.body.postSubject
@@ -315,11 +284,42 @@ router.post('/board/:idx/post', function(req, res, next){
   })
 })
 
+router.get('/board/post/:postIdx', function(req, res, next){
+  const postIdx = req.params.postIdx
+  const page = req.query.page || 1
+  const perPage = req.query.perPage || 2
+
+  const firstSequence = function(){
+    return new Promise(function (resolve, reject){
+      const pagination = Pagination.getInstance({page:page, perPage:perPage})
+      const post = Post.getInstance({idx:postIdx, pagination:pagination})
+      resolve({req:req, res:res, post:post})
+    })
+  }
+
+  const getPostSequence = function(prevResults) {
+    return new Promise(function (resolve, reject){
+      const post = prevResults[0].post
+      let promise = service.getPost(post)
+      Promise.resolve(promise).then(function(results){
+        resolve(results)
+      })
+    })
+  }
+
+  const finalSequence = sequencePromise([firstSequence,getPostSequence],function(resolve,results){
+    const param = results[0]
+    const postResults = results[1]
+
+    param.res.status(200).json({"post":postResults.data.post})
+  })
+})
+
 router.put('/board/post/:postIdx', function(req, res, next){
   const accessToken = req.accessToken
   const postIdx = req.params.postIdx
-  const postSubject = req.body.subject
-  const postContent = req.body.content
+  const postSubject = req.body.postSubject
+  const postContent = req.body.postContent
 
   const firstSequence = function(){
     return new Promise(function (resolve, reject){
@@ -384,7 +384,7 @@ router.post('/board/post/:postIdx/reply', function(req, res, next){
     return new Promise(function (resolve, reject){
       const accessUser = AccessUser.getInstance({accessToken:accessToken})
       const reply = Reply.getInstance({content:replyContent, user:accessUser})
-      resolve({req:req, res:res})
+      resolve({req:req, res:res, reply:reply})
     })
   }
 

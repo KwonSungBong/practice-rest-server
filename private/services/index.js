@@ -22,6 +22,76 @@ function sequencePromise(sequencePromiseList, finalPromise){
     })
 }
 
+exports.duplicateUserEmail = function(userEmail){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
+
+    const getUserByEmailSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getUserByEmail(userEmail)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const statusSequence = function(prevResults){
+        return new Promise(function (resolve, reject){
+            const user = prevResults[1]
+            if (user) {
+                resolve('exist')
+            } else {
+                resolve('notExist')
+            }
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, getUserByEmailSequence, statusSequence],function(resolve, results){
+        const status = results[2]
+        resolve({'status':status})
+    })
+
+    return finalSequence
+}
+
+exports.duplicateUserName = function(userName){
+    const firstSequence = function(){
+        return new Promise(function (resolve, reject){
+            resolve()
+        })
+    }
+
+    const getUserByNameSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getUserByName(userName)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const statusSequence = function(prevResults){
+        return new Promise(function (resolve, reject){
+            const user = prevResults[1]
+            if (user) {
+                resolve('exist')
+            } else {
+                resolve('notExist')
+            }
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, getUserByNameSequence, statusSequence],function(resolve, results){
+        const status = results[2]
+        resolve({'status':status})
+    })
+
+    return finalSequence
+}
+
 exports.signUp = function(user){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
@@ -104,71 +174,47 @@ exports.signOut = function(accessToken){
 
 }
 
-exports.duplicateUserEmail = function(userEmail){
+
+exports.updateAccessUser = function(accessUser){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
             resolve()
         })
     }
 
-    const getUserByEmailSequence = function(prevResults) {
+    const getAccessUserSequence = function(prevResults) {
         return new Promise(function (resolve, reject){
-            let promise = userRepository.getUserByEmail(userEmail)
+            let promise = userRepository.getAccessUser(accessUser.accessToken)
             Promise.resolve(promise).then(function(results){
                 resolve(results)
             })
-        })
-    }
-
-    const finalSequence = sequencePromise([firstSequence, getUserByEmailSequence],function(resolve, results){
-        const status = 'success'
-        resolve({'status':status})
-    })
-
-    return finalSequence
-}
-
-exports.duplicateUserName = function(userName){
-    const firstSequence = function(){
-        return new Promise(function (resolve, reject){
-            resolve()
-        })
-    }
-
-    const getUserByNameSequence = function(prevResults) {
-        return new Promise(function (resolve, reject){
-            let promise = userRepository.getUserByName(userName)
-            Promise.resolve(promise).then(function(results){
-                resolve(results)
-            })
-        })
-    }
-
-    const finalSequence = sequencePromise([firstSequence, getUserByNameSequence],function(resolve, results){
-        const status = 'success'
-        resolve({'status':status})
-    })
-
-    return finalSequence
-}
-
-exports.editAccessUser = function(accessUser){
-    const firstSequence = function(){
-        return new Promise(function (resolve, reject){
-            resolve()
         })
     }
 
     const updateAccessUserSequence = function(prevResults) {
         return new Promise(function (resolve, reject){
-            let promise = userRepository.updateAccessUser(accessUser)
+            const targetAccessUser = prevResults[1]
+            targetAccessUser.email = accessUser.email
+            targetAccessUser.password = accessUser.password
+            targetAccessUser.name = accessUser.name
+            let promise = userRepository.updateAccessUser(targetAccessUser)
             Promise.resolve(promise).then(function(results){
                 resolve(results)
             })
         })
     }
 
-    const finalSequence = sequencePromise([firstSequence, updateAccessUserSequence],function(resolve, results){
+    const updateUserSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            const targetAccessUser = prevResults[2]
+            let promise = userRepository.updateUser(targetAccessUser)
+            Promise.resolve(promise).then(function(results){
+                resolve(results)
+            })
+        })
+    }
+
+    const finalSequence = sequencePromise([firstSequence, getAccessUserSequence, updateAccessUserSequence, updateUserSequence],function(resolve, results){
         const status = 'success'
         resolve({'status':status})
     })
@@ -243,15 +289,27 @@ exports.getPost = function(post){
     const finalSequence = sequencePromise([firstSequence, getPostSequence],function(resolve,results){
         const status = 'success'
         const post = results[1]
+
         resolve({'status':status, 'data': {'post': post}})
     })
 
     return finalSequence
 }
+
 exports.insertPost = function(boardIdx, post){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
             resolve()
+        })
+    }
+
+    const getAccessUserSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getAccessUser(post.user.accessToken)
+            Promise.resolve(promise).then(function(results){
+                post.user = results
+                resolve(results)
+            })
         })
     }
 
@@ -264,9 +322,11 @@ exports.insertPost = function(boardIdx, post){
         })
     }
 
-    const finalSequence = sequencePromise([firstSequence, insertPostSequence],function(resolve, results){
+    const finalSequence = sequencePromise([firstSequence, getAccessUserSequence, insertPostSequence],function(resolve, results){
         const status = 'success'
-        resolve({'status':status})
+        const post = results[2]
+        console.log(results)
+        resolve({'status':status, 'data': {'post': post}})
     })
 
     return finalSequence
@@ -275,6 +335,16 @@ exports.updatePost = function(post){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
             resolve()
+        })
+    }
+
+    const getAccessUserSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getAccessUser(post.user.accessToken)
+            Promise.resolve(promise).then(function(results){
+                post.user = results
+                resolve(results)
+            })
         })
     }
 
@@ -287,7 +357,7 @@ exports.updatePost = function(post){
         })
     }
 
-    const finalSequence = sequencePromise([firstSequence, updatePostSequence],function(resolve, results){
+    const finalSequence = sequencePromise([firstSequence, getAccessUserSequence, updatePostSequence],function(resolve, results){
         const status = 'success'
         resolve({'status':status})
     })
@@ -324,6 +394,16 @@ exports.insertReply = function(postIdx, reply){
         })
     }
 
+    const getAccessUserSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getAccessUser(reply.user.accessToken)
+            Promise.resolve(promise).then(function(results){
+                reply.user = results
+                resolve(results)
+            })
+        })
+    }
+
     const insertReplySequence = function(prevResults) {
         return new Promise(function (resolve, reject){
             let promise = boardRepository.insertReply(postIdx, reply)
@@ -333,7 +413,7 @@ exports.insertReply = function(postIdx, reply){
         })
     }
 
-    const finalSequence = sequencePromise([firstSequence, insertReplySequence],function(resolve, results){
+    const finalSequence = sequencePromise([firstSequence, getAccessUserSequence, insertReplySequence],function(resolve, results){
         const status = 'success'
         resolve({'status':status})
     })
@@ -347,6 +427,16 @@ exports.updateReply = function(reply){
         })
     }
 
+    const getAccessUserSequence = function(prevResults) {
+        return new Promise(function (resolve, reject){
+            let promise = userRepository.getAccessUser(post.user.accessToken)
+            Promise.resolve(promise).then(function(results){
+                reply.user = results
+                resolve(results)
+            })
+        })
+    }
+
     const updateReplySequence = function(prevResults) {
         return new Promise(function (resolve, reject){
             let promise = boardRepository.updateReply(reply)
@@ -356,7 +446,7 @@ exports.updateReply = function(reply){
         })
     }
 
-    const finalSequence = sequencePromise([firstSequence, updateReplySequence],function(resolve, results){
+    const finalSequence = sequencePromise([firstSequence, getAccessUserSequence, updateReplySequence],function(resolve, results){
         const status = 'success'
         resolve({'status':status})
     })

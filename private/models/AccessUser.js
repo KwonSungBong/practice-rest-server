@@ -1,4 +1,4 @@
-import User from './User'
+import {User} from './User'
 class AccessUser extends User{
     constructor({accessToken, idx, email, password, name, regDate, modDate})
     {

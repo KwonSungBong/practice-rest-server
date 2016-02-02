@@ -45,7 +45,7 @@ class User {
         this._modDate_ = modDate
     }
 }
-
+exports.User = User
 exports.getInstance = function(param){
     let {idx, email, password, name, regDate, modDate} = param
     //let  validIdx = idx && Number.isInteger(idx)
