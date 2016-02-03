@@ -56,9 +56,9 @@ router.get('/duplicate/user/email/:userEmail', function(req, res, next) {
     const param = results[0]
     const duplicateUserEmailResult = results[1]
     if(duplicateUserEmailResult.status === 'notExist'){
-      param.res.status(200).json({"message":'Á¸ÀçÇÏÁö ¾Ê´Â ÀÌ¸ŞÀÏÀÔ´Ï´Ù.'})
+      param.res.status(200).json({"message":'ì¡´ì¬í•˜ì§€ ì•ŠëŠ” ì´ë©”ì¼ì…ë‹ˆë‹¤.'})
     }else if(duplicateUserEmailResult.status === 'exist'){
-      param.res.status(202).json({'message':'ÀÌ¹Ì Á¸ÀçÇÏ´Â ÀÌ¸ŞÀÏÀÔ´Ï´Ù.'})
+      param.res.status(202).json({'message':'ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ì´ë©”ì¼ì…ë‹ˆë‹¤.'})
     }
   })
 })
@@ -85,9 +85,9 @@ router.get('/duplicate/user/name/:userName', function(req, res, next) {
     const param = results[0]
     const duplicateUserNameResult = results[1]
     if(duplicateUserNameResult.status === 'notExist'){
-      param.res.status(200).json({"message":'Á¸ÀçÇÏÁö ¾Ê´Â ÀÌ¸§ÀÔ´Ï´Ù.'})
+      param.res.status(200).json({"message":'ì¡´ì¬í•˜ì§€ ì•ŠëŠ” ì´ë¦„ì…ë‹ˆë‹¤.'})
     }else if(duplicateUserNameResult.status === 'exist'){
-      param.res.status(202).json({'message':'ÀÌ¹Ì Á¸ÀçÇÏ´Â ÀÌ¸§ÀÔ´Ï´Ù.'})
+      param.res.status(202).json({'message':'ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ì´ë¦„ì…ë‹ˆë‹¤.'})
     }
   })
 })
@@ -185,9 +185,9 @@ router.get('/login', function(req, res, next) {
       param.res.header('access-token', signInResult.data.accessToken)
       param.res.status(200).json({"user":signInResult.data.user})
     }else if(signInResult.status === 'differentPassword'){
-      param.res.status(202).json({'message':'ºñ¹Ğ¹øÈ£°¡ Æ²·È½À´Ï´Ù.'})
+      param.res.status(202).json({'message':'ë¹„ë°€ë²ˆí˜¸ê°€ í‹€ë ¸ìŠµë‹ˆë‹¤.'})
     }else if(signInResult.status === 'notExistEmail'){
-      param.res.status(202).json({'message':'ÇØ´ç ÀÌ¸ŞÀÏÀº Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.'})
+      param.res.status(202).json({'message':'í•´ë‹¹ ì´ë©”ì¼ì€ ë“±ë¡ë˜ì–´ìˆì§€ ì•ŠìŠµë‹ˆë‹¤.'})
     }
   })
 })
