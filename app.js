@@ -21,7 +21,7 @@ app.use(function(req, res, next){
   const accessToken = req.headers['access-token']
   req.accessToken = accessToken
   /*
-   // url °Ë»çÇØ¼­ ¿¢¼¼½º ÅäÅ«ÀÌ ¾ø´Â °æ¿ì ±ÇÇÑ¾øÀ½ ¹ÝÈ¯
+   // url ê¶Œí•œê²€ì‚¬
    */
   next()
 })
