@@ -21,7 +21,7 @@ app.use(function(req, res, next){
   const accessToken = req.headers['access-token']
   req.accessToken = accessToken
   /*
-   // url 권한검사
+   // url 권한검사 확인
    */
   next()
 })
