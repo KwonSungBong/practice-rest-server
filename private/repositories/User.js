@@ -2,18 +2,24 @@ import {userDao} from './define/defineSequelize'
 import {sessionDao} from './define/defineSession'
 import User from '../models/User'
 import AccessUser from '../models/AccessUser'
-import crypto from "crypto"
+import auth from '../components/auth'
+import util from 'util'
+
+const tokenKey = "tokens:%s"
 
 exports.insertAccessUser = function(user){
-    let md5sum = crypto.createHash('md5')
-    md5sum.update(user.email)
-    const accessToken = md5sum.digest('hex')
-    sessionDao.hmset(accessToken,'idx', user.idx, 'email', user.email, 'name', user.name, 'regDate', user.regDate, 'modDate', user.modDate)
+    const accessToken = auth.signToken(user.idx)
+    sessionDao.hmset(util.format(tokenKey, accessToken), {
+        'accessToken': accessToken,
+        'idx': user.idx,
+        'email': user.email,
+        'name': user.name
+    })
     return accessToken
 }
 
 exports.updateAccessUser = function(accessUser){
-    return sessionDao.hmset(accessUser.accessToken,'idx', accessUser.idx, 'email', accessUser.email, 'name', accessUser.name, 'regDate', accessUser.regDate, 'modDate', accessUser.modDate).then(function(results){
+    return sessionDao.hmset(util.format(tokenKey, accessUser.accessToken), 'email', accessUser.email, 'name', accessUser.name).then(function(results){
         return accessUser
     }).catch(function(err){
         console.log(err)
@@ -21,8 +27,8 @@ exports.updateAccessUser = function(accessUser){
 }
 
 exports.getAccessUser = function(accessToken){
-    return sessionDao.hgetall(accessToken).then(function(results){
-        return AccessUser.getInstance({idx:results.idx,email:results.email,password:results.password,name:results.name,regDate:results.regDate,modDate:results.modDate,accessToken:accessToken})
+    return sessionDao.hgetall(util.format(tokenKey, accessToken)).then(function(results){
+        return AccessUser.getInstance({idx:results.idx,email:results.email,password:results.password,name:results.name,accessToken:accessToken})
     }).catch(function(err){
         console.log(err)
     })
@@ -40,6 +46,15 @@ exports.updateUser = function(user){
     return userDao.update({'email':user.email, 'password':user.password, 'name':user.name}, {where: {idx: user.idx}}).then(function(results){
         return user
     }).catch(function(err){
+        console.log(err)
+    })
+}
+
+exports.getUserByIdx = function(idx){
+    return userDao.findOne({where: {'idx':idx}}).then(function(results) {
+        return results && User.getInstance(results.dataValues)
+    })
+    .catch(function(err){
         console.log(err)
     })
 }

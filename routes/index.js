@@ -1,4 +1,5 @@
-import express from 'express';
+import express from 'express'
+import auth from '../private/components/auth'
 import service from '../private/services/index'
 import User from '../private/models/User'
 import Post from '../private/models/Post'
@@ -7,6 +8,7 @@ import Board from '../private/models/Board'
 import AccessUser from '../private/models/AccessUser'
 import Pagination from '../private/models/Pagination'
 import SearchCondition from '../private/models/SearchCondition'
+
 let router = express.Router()
 
 function sequencePromise(sequencePromiseList, finalPromise){
@@ -125,23 +127,24 @@ router.post('/accessUser', function(req, res, next) {
   })
 })
 
-router.put('/accessUser', function(req, res, next){
-  const accessToken = req.accessToken
+router.put('/accessUser', auth.isAuthenticated(), function(req, res, next){
   const userEmail = req.body.userEmail
   const userPassword = req.body.userPassword
   const userName = req.body.userName
 
   const firstSequence = function(){
     return new Promise(function (resolve, reject){
-      const accessUser = AccessUser.getInstance({accessToken:accessToken, email:userEmail, password:userPassword, name:userName})
-      resolve({'req':req, 'res':res, 'accessUser':accessUser})
+      const accessUser = req.accessUser
+      const updateUserInfo = AccessUser.getInstance({email:userEmail, password:userPassword, name:userName})
+      resolve({req:req, res:res, accessUser:accessUser, updateUserInfo:updateUserInfo})
     })
   }
 
   const updateAccessUserSequence = function(prevResults) {
     return new Promise(function (resolve, reject){
       const accessUser = prevResults[0].accessUser
-      let promise = service.updateAccessUser(accessUser)
+      const updateUserInfo = prevResults[0].updateUserInfo
+      let promise = service.updateAccessUser(accessUser,updateUserInfo)
       Promise.resolve(promise).then(function(results){
         resolve(results)
       })
@@ -159,9 +162,9 @@ router.put('/accessUser', function(req, res, next){
   })
 })
 
-router.get('/login', function(req, res, next) {
-  const userEmail = req.query.userEmail
-  const userPassword = req.query.userPassword
+router.post('/login', function(req, res, next) {
+  const userEmail = req.body.userEmail
+  const userPassword = req.body.userPassword
 
   const firstSequence = function(){
     return new Promise(function (resolve, reject){
@@ -181,23 +184,22 @@ router.get('/login', function(req, res, next) {
   const finalSequence = sequencePromise([firstSequence,signInSequence],function(resolve,results){
     const param = results[0]
     const signInResult = results[1]
+
     if(signInResult.status === 'success'){
-      param.res.header('access-token', signInResult.data.accessToken)
-      param.res.status(200).json({"user":signInResult.data.user})
+      param.res.status(200).json({accessToken:signInResult.data.accessToken,user:signInResult.data.user})
     }else if(signInResult.status === 'differentPassword'){
-      param.res.status(202).json({'message':'비밀번호가 틀렸습니다.'})
+      param.res.status(202).json({message:'비밀번호가 틀렸습니다.'})
     }else if(signInResult.status === 'notExistEmail'){
-      param.res.status(202).json({'message':'해당 이메일은 등록되어있지 않습니다.'})
+      param.res.status(202).json({message:'해당 이메일은 등록되어있지 않습니다.'})
     }
   })
 })
 
-router.post('/logout', function(req, res, next) {
-  const accessToken = req.accessToken
+router.post('/logout', auth.isAuthenticated(), function(req, res, next) {
   res.status(200).json()
 })
 
-router.get('/boards', function(req, res, next){
+router.get('/boards', auth.isAuthenticated(), function(req, res, next){
   const firstSequence = function(){
     return new Promise(function (resolve, reject){
       resolve({'req':req, 'res':res})
@@ -220,7 +222,7 @@ router.get('/boards', function(req, res, next){
   })
 })
 
-router.get('/board/:boardIdx', function(req, res, next){
+router.get('/board/:boardIdx', auth.isAuthenticated(), function(req, res, next){
   const boardIdx = req.params.boardIdx
   const page = req.query.page || 1
   const perPage = req.query.perPage || 2
@@ -253,7 +255,7 @@ router.get('/board/:boardIdx', function(req, res, next){
   })
 })
 
-router.post('/board/:boardIdx/post', function(req, res, next){
+router.post('/board/:boardIdx/post', auth.isAuthenticated(), function(req, res, next){
   const accessToken = req.accessToken
   const boardIdx = req.params.boardIdx
   const postSubject = req.body.postSubject
@@ -284,7 +286,7 @@ router.post('/board/:boardIdx/post', function(req, res, next){
   })
 })
 
-router.get('/board/post/:postIdx', function(req, res, next){
+router.get('/board/post/:postIdx', auth.isAuthenticated(), function(req, res, next){
   const postIdx = req.params.postIdx
   const page = req.query.page || 1
   const perPage = req.query.perPage || 2
@@ -315,7 +317,7 @@ router.get('/board/post/:postIdx', function(req, res, next){
   })
 })
 
-router.put('/board/post/:postIdx', function(req, res, next){
+router.put('/board/post/:postIdx', auth.isAuthenticated(), function(req, res, next){
   const accessToken = req.accessToken
   const postIdx = req.params.postIdx
   const postSubject = req.body.postSubject
@@ -346,7 +348,7 @@ router.put('/board/post/:postIdx', function(req, res, next){
   })
 })
 
-router.delete('/board/post/:postIdx', function(req, res, next){
+router.delete('/board/post/:postIdx', auth.isAuthenticated(), function(req, res, next){
   const accessToken = req.accessToken
   const postIdx = req.params.postIdx
 
@@ -375,7 +377,7 @@ router.delete('/board/post/:postIdx', function(req, res, next){
   })
 })
 
-router.post('/board/post/:postIdx/reply', function(req, res, next){
+router.post('/board/post/:postIdx/reply', auth.isAuthenticated(), function(req, res, next){
   const accessToken = req.accessToken
   const postIdx = req.params.postIdx
   const replyContent = req.body.replyContent
@@ -405,7 +407,7 @@ router.post('/board/post/:postIdx/reply', function(req, res, next){
   })
 })
 
-router.put('/board/post/reply/:replyIdx', function(req, res, next){
+router.put('/board/post/reply/:replyIdx', auth.isAuthenticated(), function(req, res, next){
   const accessToken = req.accessToken
   const replyIdx = req.params.replyIdx
   const replyContent = req.body.replyContent
@@ -435,7 +437,7 @@ router.put('/board/post/reply/:replyIdx', function(req, res, next){
   })
 })
 
-router.delete('/board/post/reply/:replyIdx', function(req, res, next){
+router.delete('/board/post/reply/:replyIdx', auth.isAuthenticated(), function(req, res, next){
   const accessToken = req.accessToken
   const replyIdx = req.params.replyIdx
 

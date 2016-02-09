@@ -175,29 +175,17 @@ exports.signOut = function(accessToken){
 }
 
 
-exports.updateAccessUser = function(accessUser){
+exports.updateAccessUser = function(accessUser, updateUserInfo){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
             resolve()
         })
     }
 
-    const getAccessUserSequence = function(prevResults) {
-        return new Promise(function (resolve, reject){
-            let promise = userRepository.getAccessUser(accessUser.accessToken)
-            Promise.resolve(promise).then(function(results){
-                resolve(results)
-            })
-        })
-    }
-
     const updateAccessUserSequence = function(prevResults) {
         return new Promise(function (resolve, reject){
-            const targetAccessUser = prevResults[1]
-            targetAccessUser.email = accessUser.email
-            targetAccessUser.password = accessUser.password
-            targetAccessUser.name = accessUser.name
-            let promise = userRepository.updateAccessUser(targetAccessUser)
+            updateUserInfo.accessToken = accessUser.accessToken
+            let promise = userRepository.updateAccessUser(updateUserInfo)
             Promise.resolve(promise).then(function(results){
                 resolve(results)
             })
@@ -206,15 +194,14 @@ exports.updateAccessUser = function(accessUser){
 
     const updateUserSequence = function(prevResults) {
         return new Promise(function (resolve, reject){
-            const targetAccessUser = prevResults[2]
-            let promise = userRepository.updateUser(targetAccessUser)
+            let promise = userRepository.updateUser(updateUserInfo)
             Promise.resolve(promise).then(function(results){
                 resolve(results)
             })
         })
     }
 
-    const finalSequence = sequencePromise([firstSequence, getAccessUserSequence, updateAccessUserSequence, updateUserSequence],function(resolve, results){
+    const finalSequence = sequencePromise([firstSequence, updateAccessUserSequence, updateUserSequence],function(resolve, results){
         const status = 'success'
         resolve({'status':status})
     })
