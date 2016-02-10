@@ -87,14 +87,14 @@ router.get('/duplicate/user/name/:userName', function(req, res, next) {
     const param = results[0]
     const duplicateUserNameResult = results[1]
     if(duplicateUserNameResult.status === 'notExist'){
-      param.res.status(200).json({"message":'존재하지 않는 이름입니다.'})
+      param.res.status(200).json({"duplicateState":true, "message":'존재하지 않는 이름입니다.'})
     }else if(duplicateUserNameResult.status === 'exist'){
-      param.res.status(202).json({'message':'이미 존재하는 이름입니다.'})
+      param.res.status(200).json({"duplicateState":false, 'message':'이미 존재하는 이름입니다.'})
     }
   })
 })
 
-router.post('/accessUser', function(req, res, next) {
+router.post('/signUp', function(req, res, next) {
   const userEmail = req.body.userEmail
   const userPassword = req.body.userPassword
   const userName = req.body.userName
@@ -127,7 +127,7 @@ router.post('/accessUser', function(req, res, next) {
   })
 })
 
-router.put('/accessUser', auth.isAuthenticated(), function(req, res, next){
+router.put('/editProfile', auth.isAuthenticated(), function(req, res, next){
   const userEmail = req.body.userEmail
   const userPassword = req.body.userPassword
   const userName = req.body.userName
@@ -140,18 +140,18 @@ router.put('/accessUser', auth.isAuthenticated(), function(req, res, next){
     })
   }
 
-  const updateAccessUserSequence = function(prevResults) {
+  const editProfileSequence = function(prevResults) {
     return new Promise(function (resolve, reject){
       const accessUser = prevResults[0].accessUser
       const updateUserInfo = prevResults[0].updateUserInfo
-      let promise = service.updateAccessUser(accessUser,updateUserInfo)
+      let promise = service.editProfile(accessUser,updateUserInfo)
       Promise.resolve(promise).then(function(results){
         resolve(results)
       })
     })
   }
 
-  const finalSequence = sequencePromise([firstSequence,updateAccessUserSequence],function(resolve,results){
+  const finalSequence = sequencePromise([firstSequence,editProfileSequence],function(resolve,results){
     const param = results[0]
     const editAccessUserResult = results[1]
     if(editAccessUserResult.status === 'success'){
@@ -162,7 +162,7 @@ router.put('/accessUser', auth.isAuthenticated(), function(req, res, next){
   })
 })
 
-router.post('/login', function(req, res, next) {
+router.post('/signIn', function(req, res, next) {
   const userEmail = req.body.userEmail
   const userPassword = req.body.userPassword
 
@@ -195,7 +195,7 @@ router.post('/login', function(req, res, next) {
   })
 })
 
-router.post('/logout', auth.isAuthenticated(), function(req, res, next) {
+router.post('/signOut', auth.isAuthenticated(), function(req, res, next) {
   res.status(200).json()
 })
 

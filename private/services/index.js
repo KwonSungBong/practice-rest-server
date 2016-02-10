@@ -175,7 +175,7 @@ exports.signOut = function(accessToken){
 }
 
 
-exports.updateAccessUser = function(accessUser, updateUserInfo){
+exports.editProfile = function(accessUser, updateUserInfo){
     const firstSequence = function(){
         return new Promise(function (resolve, reject){
             resolve()
