@@ -58,9 +58,9 @@ router.get('/duplicate/user/email/:userEmail', function(req, res, next) {
     const param = results[0]
     const duplicateUserEmailResult = results[1]
     if(duplicateUserEmailResult.status === 'notExist'){
-      param.res.status(200).json({"message":'존재하지 않는 이메일입니다.'})
+      param.res.status(200).json({"duplicateState":true, "message":'존재하지 않는 이메일입니다.'})
     }else if(duplicateUserEmailResult.status === 'exist'){
-      param.res.status(202).json({'message':'이미 존재하는 이메일입니다.'})
+      param.res.status(202).json({"duplicateState":false, 'message':'이미 존재하는 이메일입니다.'})
     }
   })
 })

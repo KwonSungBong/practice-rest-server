@@ -10,9 +10,8 @@ function signToken(id) {
 function isAuthenticated() {
     return compose()
     .use(function(req, res, next) {
-        const accessToken = req.headers['authorization'].replace('Bearer ', '')
-
         try {
+            const accessToken = req.headers['authorization'].replace('Bearer ', '')
             const decoded = jwt.verify(accessToken, SECRET)
             Promise.resolve(userRepository.getAccessUser(accessToken)).then(function(results){
                 req.accessUser = results
