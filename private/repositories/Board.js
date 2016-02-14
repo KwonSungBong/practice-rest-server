@@ -7,7 +7,10 @@ import Reply from '../models/Reply'
 
 exports.getBoards = function() {
     return boardDao.findAll({raw:true}).then(function(results) {
-        return results
+        const parseBoards = results.map(function (board) {
+            return Board.getInstance(board)
+        })
+        return parseBoards
     }).catch(function(err){
         console.log(err)
     })
